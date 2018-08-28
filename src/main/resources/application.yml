@@ -1,0 +1,9 @@
+server:
+  port: 8011
+spring:
+  application:
+    name: conhub-user-service
+  cloud:
+    config:
+      uri:
+      - http://${CONFIG_CLIENT_HOST:localhost}:8888
