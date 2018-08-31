@@ -5,7 +5,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import com.karol.model.domain.AppUserDetails;
+import com.karol.model.dto.AppUserDetailsDto;
 import com.karol.services.interfaces.AppUserDetailsService;
 @Component
 public class Bootstrap implements CommandLineRunner{
@@ -21,7 +21,7 @@ public class Bootstrap implements CommandLineRunner{
 		
 	}
 	private void saveTestUser() {
-		AppUserDetails user = new AppUserDetails();
+		AppUserDetailsDto user = new AppUserDetailsDto();
 		user.setUsername("username");
 		user.setPassword(passwordEncoder.encode("password"));
 		user.setRoles("ROLE_USER");
