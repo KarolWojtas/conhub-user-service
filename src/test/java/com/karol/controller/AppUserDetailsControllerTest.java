@@ -68,16 +68,16 @@ public class AppUserDetailsControllerTest {
 	}
 	@Test
 	public void testSaveUser() throws JsonProcessingException, Exception {
-		given(userService.saveUser(any())).willReturn(userDetails);
+		given(userService.saveUser(any())).willReturn(userDto);
 		
 		mockMvc.perform(post("").contentType(MediaType.APPLICATION_JSON).content(jsonMapper.writeValueAsString(userDto)))
 			.andExpect(status().isCreated());
 	}
 	@Test
 	public void patchUser() throws JsonProcessingException, Exception {
-		given(userService.patchUser(any(AppUserDetailsDto.class))).willReturn(userDto);
+		given(userService.patchUser(any(AppUserDetailsDto.class), anyString())).willReturn(userDto);
 		
-		mockMvc.perform(patch("").contentType(MediaType.APPLICATION_JSON).content(jsonMapper.writeValueAsString(userDto)))
+		mockMvc.perform(patch("/username").contentType(MediaType.APPLICATION_JSON).content(jsonMapper.writeValueAsString(userDto)))
 		 .andExpect(status().isAccepted());
 	}
 	@Test

@@ -1,0 +1,21 @@
+server:
+  port: 8011
+spring:
+  application:
+    name: conhub-user-service
+  cloud:
+     config:
+      discovery:
+        service-id: conhub-config-server 
+        enabled: true
+        
+eureka:
+  client:
+    enabled: true
+    register-with-eureka: true
+    registryFetchIntervalSeconds: 5
+    should-enforce-registration-at-init: true
+    service-url:
+      defaultZone: http://${EUREKA_SERVER_HOST:localhost}:8761/eureka
+  instance:
+    leaseRenewalIntervalInSeconds: 10

@@ -3,6 +3,8 @@ package com.karol.services;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.transaction.Transactional;
+
 import org.bouncycastle.crypto.tls.UserMappingType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,9 +44,14 @@ public class AppUserDetailsServiceImpl implements AppUserDetailsService{
 	
 
 	@Override
-	public AppUserDetails saveUser(AppUserDetailsDto userDetails) {
+	
+	public AppUserDetailsDto saveUser(AppUserDetailsDto userDetails) throws UsernameNotUniqueException {
 		userDetails.setId(null);
-		return userRepository.save(userDetailsMapper.appUserDetailsDtoToAppUserDetails(userDetails));
+		AppUserDetails savedUser =  userRepository.save(userDetailsMapper.appUserDetailsDtoToAppUserDetails(userDetails));
+		if(savedUser == null) {
+			throw new UsernameNotUniqueException();
+		}
+		return userDetailsMapper.appUserDetailsToAppUserDetailsDto(savedUser);
 	}
 
 	@Override
@@ -63,14 +70,16 @@ public class AppUserDetailsServiceImpl implements AppUserDetailsService{
 	}
 
 	@Override
+	@Transactional
 	public void deleteUserByUsername(String username) {
 		userRepository.deleteByUsername(username);
 		
 	}
 
 	@Override
-	public AppUserDetailsDto patchUser(AppUserDetailsDto userDetailsDto) throws UserNotFoundException {
-		AppUserDetails savedUser = userRepository.findByUsername(userDetailsDto.getUsername());
+	
+	public AppUserDetailsDto patchUser(AppUserDetailsDto userDetailsDto, String username) throws UserNotFoundException {
+		AppUserDetails savedUser = userRepository.findByUsername(username);
 		if(savedUser == null) {
 			throw new UserNotFoundException("User: "+userDetailsDto.getUsername()+" not found");
 		}

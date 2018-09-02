@@ -19,7 +19,6 @@ public class AppUserDetailsDto {
 	@JsonView(Views.Public.class)
 	private Long id;
 	@JsonView(Views.Public.class)
-	@NotBlank
 	private String username;
 	@JsonView(Views.Private.class)
 	private String password;

@@ -46,11 +46,11 @@ public class AppUserDetailsServiceImplITTest {
 	}
 
 	@Test
-	public void testSaveUser() {
-		AppUserDetails savedUser = service.saveUser(userDto);
+	public void testSaveUser() throws UsernameNotUniqueException {
+		AppUserDetailsDto savedUser = service.saveUser(userDto);
 		
 		assertEquals(userDto.getUsername(), savedUser.getUsername());
-		assertEquals(userDto.getPassword(), savedUser.getPassword());
+		assertNotNull(savedUser.getId());
 		assertEquals(userDto.getRoles(), savedUser.getRoles());
 	}
 
@@ -68,7 +68,7 @@ public class AppUserDetailsServiceImplITTest {
 		entityManager.persist(userDetails);
 		userDto.setUsername("user");
 		
-		AppUserDetailsDto patchedDto = service.patchUser(userDto);
+		AppUserDetailsDto patchedDto = service.patchUser(userDto,"user");
 		assertEquals(userDto.getRoles(), patchedDto.getRoles());
 		
 	}
@@ -78,7 +78,7 @@ public class AppUserDetailsServiceImplITTest {
 		userDto.setUsername("user");
 		userDto.setRoles("ROLE_ADMIN,ROLE_TEST,KJASD,ROLE_USER");
 		
-		AppUserDetailsDto patchedDto = service.patchUser(userDto);
+		AppUserDetailsDto patchedDto = service.patchUser(userDto, "user");
 		assertEquals("ROLE_ADMIN,ROLE_USER", patchedDto.getRoles());
 		assertNotEquals(userDto.getId(), patchedDto.getId());
 	}

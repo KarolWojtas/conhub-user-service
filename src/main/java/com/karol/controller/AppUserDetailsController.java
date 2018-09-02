@@ -47,7 +47,7 @@ public class AppUserDetailsController {
 		return userService.getUserByUsername(username);
 	}
 	@PostMapping("")
-	public ResponseEntity<String> saveUser(@Valid @RequestBody(required=true) AppUserDetailsDto userDto) throws URISyntaxException{
+	public ResponseEntity<String> saveUser(@Valid @RequestBody(required=true) AppUserDetailsDto userDto) throws URISyntaxException, UsernameNotUniqueException{
 		userService.saveUser(userDto);
 		return ResponseEntity.created(new URI("/"+userDto.getUsername())).body("Saved user: "+userDto.getUsername());
 	}
@@ -56,10 +56,10 @@ public class AppUserDetailsController {
 		userService.deleteUserByUsername(username);
 		return ResponseEntity.accepted().body("User: "+username+" successfully deleted");
 	}
-	@PatchMapping("")
-	public ResponseEntity<String> patchUser(@Valid @RequestBody(required=true) AppUserDetailsDto userDto) throws UserNotFoundException{
-		userService.patchUser(userDto);
-		return ResponseEntity.accepted().body("User: "+userDto.getUsername()+" successfully patched");
+	@PatchMapping("/{username}")
+	public ResponseEntity<String> patchUser(@PathVariable String username, @RequestBody(required=true) AppUserDetailsDto userDto) throws UserNotFoundException{
+		userService.patchUser(userDto, username);
+		return ResponseEntity.accepted().body("User: "+username+" successfully patched");
 	}
 	@GetMapping("/auth/checkusername/{username}")
 	public ResponseEntity<String> isUsernameUnique(@PathVariable(required=true) String username){
@@ -76,6 +76,7 @@ public class AppUserDetailsController {
 		return user;
 	}
 	@GetMapping("/{username}/changeusername/{newusername}")
+	@JsonView(Views.Public.class)
 	public AppUserDetailsDto changeUsername(@PathVariable String username, @PathVariable String newusername) throws UserNotFoundException, UsernameNotUniqueException {
 		return userService.changeUsername(username, newusername);
 	}
