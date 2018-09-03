@@ -1,5 +1,8 @@
 package com.karol.controller;
 
+
+
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -14,7 +17,7 @@ public class AppUserDetailsControllerAdvice {
 	public ResponseEntity handleUserNotFound() {
 		return ResponseEntity.notFound().build();
 	}
-	@ExceptionHandler(value= {UsernameNotUniqueException.class})
+	@ExceptionHandler(value= {UsernameNotUniqueException.class,ConstraintViolationException.class})
 	public ResponseEntity handleUsernamenotUnique() {
 		return ResponseEntity.badRequest().build();
 	}

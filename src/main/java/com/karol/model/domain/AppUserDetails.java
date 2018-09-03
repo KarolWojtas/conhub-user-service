@@ -1,5 +1,6 @@
 package com.karol.model.domain;
 
+import java.time.Instant;
 import java.util.Collection;
 
 import javax.persistence.Column;
@@ -34,6 +35,7 @@ public class AppUserDetails implements UserDetails{
 	private String username;
 	private String password;
 	private String githubUsername;
+	private Instant accountCreated;
 	@NotBlank
 	private String roles;
 	@Override

@@ -64,14 +64,16 @@ public class AppUserDetailsController {
 	@GetMapping("/auth/checkusername/{username}")
 	public ResponseEntity<String> isUsernameUnique(@PathVariable(required=true) String username){
 		boolean isUsernameUnique = userService.isUsernameUnique(username);
+		System.out.println(isUsernameUnique);
 		if(isUsernameUnique) {
-			return ResponseEntity.ok("Username: "+username+" is unique");
+			return ResponseEntity.ok("true");
 		} else {
-			return ResponseEntity.badRequest().build();
+			return ResponseEntity.ok("false");
 		}
 	}
+	
 	@GetMapping("/auth/githubusername/{githubUsername}")
-	public AppUserDetails getUserByGithubUsername(@PathVariable String githubUsername) throws UserNotFoundException {
+	public AppUserDetails getUserByGithubUsername(@PathVariable String githubUsername) {
 		AppUserDetails user = userService.getUserByGithubUsername(githubUsername);
 		return user;
 	}

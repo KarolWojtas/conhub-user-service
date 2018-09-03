@@ -1,6 +1,7 @@
 package com.karol.controller;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
@@ -85,7 +86,7 @@ public class AppUserDetailsControllerTest {
 		given(userService.isUsernameUnique(anyString())).willReturn(false);
 		
 		mockMvc.perform(get("/auth/checkusername/notunique"))
-			.andExpect(status().isBadRequest());
+			.andExpect(status().isOk());
 	}
 	@Test
 	public void testCheckUsernameUnique() throws Exception {
@@ -103,11 +104,11 @@ public class AppUserDetailsControllerTest {
 			.andExpect(jsonPath("$.githubUsername", is("gtusr")));
 	}
 	@Test
-	public void testFindByGithubException() throws Exception {
-		given(userService.getUserByGithubUsername(anyString())).willThrow(UserNotFoundException.class);
+	public void testFindByGithubNull() throws Exception {
+		given(userService.getUserByGithubUsername(anyString())).willReturn(null);
 		
 		mockMvc.perform(get("/auth/githubusername/githubusr"))
-		 .andExpect(status().isNotFound());
+		 .andExpect(status().isOk());
 	}
 	@Test
 	public void testChangeUsername() throws Exception {

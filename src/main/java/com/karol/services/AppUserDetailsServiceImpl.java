@@ -1,5 +1,6 @@
 package com.karol.services;
 
+import java.time.Instant;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,9 +48,13 @@ public class AppUserDetailsServiceImpl implements AppUserDetailsService{
 	
 	public AppUserDetailsDto saveUser(AppUserDetailsDto userDetails) throws UsernameNotUniqueException {
 		userDetails.setId(null);
+		userDetails.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+		if(userDetails.getAccountCreated()==null) {
+			userDetails.setAccountCreated(Instant.now());
+		}
 		AppUserDetails savedUser =  userRepository.save(userDetailsMapper.appUserDetailsDtoToAppUserDetails(userDetails));
 		if(savedUser == null) {
-			throw new UsernameNotUniqueException();
+		  throw new UsernameNotUniqueException();
 		}
 		return userDetailsMapper.appUserDetailsToAppUserDetailsDto(savedUser);
 	}
@@ -119,10 +124,10 @@ public class AppUserDetailsServiceImpl implements AppUserDetailsService{
 	}
 
 	@Override
-	public AppUserDetails getUserByGithubUsername(String githubUsername) throws UserNotFoundException {
+	public AppUserDetails getUserByGithubUsername(String githubUsername) {
 		AppUserDetails user = userRepository.findByGithubUsername(githubUsername);
 		if(user == null) {
-			throw new UserNotFoundException("User: "+githubUsername+" not found");
+			return null;
 		}
 		return user;
 	}

@@ -1,6 +1,6 @@
 package com.karol.model.dto;
 
-import javax.validation.constraints.NotBlank;
+import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.karol.model.views.Views;
@@ -26,4 +26,7 @@ public class AppUserDetailsDto {
 	private String roles;
 	@JsonView(Views.Private.class)
 	private String githubUsername;
+	@JsonView(Views.Private.class)
+	private Instant accountCreated;
+	
 }

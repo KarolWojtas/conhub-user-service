@@ -63,12 +63,20 @@ public class AppUserDetailsServiceImplTest {
 	}
 	
 	@Test
-	public void testGetByGithubUsername() throws UserNotFoundException {
+	public void testGetByGithubUsername(){
 		given(userRepository.findByGithubUsername(anyString())).willReturn(userDetails);
 		
 		AppUserDetails savedUser = service.getUserByGithubUsername("githubusername");
 		
 		assertEquals(userDetails.getGithubUsername(), savedUser.getGithubUsername());
+	}
+	@Test
+	public void testGetByGithubUsernameNull() {
+		given(userRepository.findByGithubUsername(anyString())).willReturn(null);
+		
+		AppUserDetails savedUserDetails = service.getUserByGithubUsername("nullgithub");
+		
+		assertNull(savedUserDetails);
 	}
 
 }

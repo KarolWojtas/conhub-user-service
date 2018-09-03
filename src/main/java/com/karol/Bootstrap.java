@@ -24,7 +24,7 @@ public class Bootstrap implements CommandLineRunner{
 	private void saveTestUser() throws UsernameNotUniqueException {
 		AppUserDetailsDto user = new AppUserDetailsDto();
 		user.setUsername("username");
-		user.setPassword(passwordEncoder.encode("password"));
+		user.setPassword("password");
 		user.setRoles("ROLE_USER");
 		userDetailsService.saveUser(user);
 	}

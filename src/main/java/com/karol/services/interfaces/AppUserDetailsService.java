@@ -13,7 +13,7 @@ public interface AppUserDetailsService extends UserDetailsService{
 	public void deleteUserByUsername(String username);
 	public AppUserDetailsDto patchUser(AppUserDetailsDto userDetailsDto, String username) throws UserNotFoundException;
 	public boolean isUsernameUnique(String username);
-	public AppUserDetails getUserByGithubUsername(String githubUsername) throws UserNotFoundException;
+	public AppUserDetails getUserByGithubUsername(String githubUsername);
 	public AppUserDetailsDto changeUsername(String oldUsername, String newUsername) throws UserNotFoundException, UsernameNotUniqueException;
 	public long count();
 }

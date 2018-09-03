@@ -5,9 +5,20 @@ spring:
     name: conhub-user-service
   cloud:
      config:
-      discovery:
-        service-id: conhub-config-server 
-        enabled: true
+      enabled: false
+  datasource:
+   url: jdbc:postgresql://localhost:5433/conhub
+   username: postgres
+   password: password
+   driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
         
 eureka:
   client:
