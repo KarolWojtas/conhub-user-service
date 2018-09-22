@@ -11,6 +11,7 @@ import javax.persistence.Id;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,6 +37,8 @@ public class AppUserDetails implements UserDetails{
 	private String password;
 	private String githubUsername;
 	private Instant accountCreated;
+	@Nullable
+	private byte[] avatar;
 	@NotBlank
 	private String roles;
 	@Override

@@ -9,11 +9,16 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.json.BasicJsonTester;
+import org.springframework.boot.test.json.JacksonTester;
+import org.springframework.boot.test.json.ObjectContent;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,6 +29,7 @@ import com.karol.model.dto.AppUserDetailsDto;
 import com.karol.model.exceptions.UserNotFoundException;
 import com.karol.model.exceptions.UsernameNotUniqueException;
 import com.karol.model.mappers.AppUserDetailsMapper;
+import com.karol.model.views.Views;
 import com.karol.services.AppUserDetailsServiceImpl;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.*;
@@ -31,12 +37,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.hamcrest.core.IsNull;
 @RunWith(SpringRunner.class)
 @WebMvcTest(AppUserDetailsController.class)
 public class AppUserDetailsControllerTest {
 	@Autowired
 	MockMvc mockMvc;
+	
 	@MockBean
 	private AppUserDetailsServiceImpl userService;
 	@InjectMocks
@@ -62,17 +73,22 @@ public class AppUserDetailsControllerTest {
 
 	@Test
 	public void testGetUserByUsername() throws Exception {
-		given(userService.getUserByUsername(anyString())).willReturn(mapper.appUserDetailsToAppUserDetailsDto(userDetails));
+		given(userService.getUserByUsername(anyString())).willReturn(userDto);
 		
 		mockMvc.perform(get("/username"))
-			.andExpect(status().isOk());
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id", is(Integer.valueOf(userDto.getId().toString()))))
+			.andExpect(jsonPath("$.username", is(userDto.getUsername())));
 	}
 	@Test
 	public void testSaveUser() throws JsonProcessingException, Exception {
 		given(userService.saveUser(any())).willReturn(userDto);
 		
 		mockMvc.perform(post("").contentType(MediaType.APPLICATION_JSON).content(jsonMapper.writeValueAsString(userDto)))
-			.andExpect(status().isCreated());
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.username", is(userDto.getUsername())))
+			.andReturn();
+		
 	}
 	@Test
 	public void patchUser() throws JsonProcessingException, Exception {
@@ -85,15 +101,17 @@ public class AppUserDetailsControllerTest {
 	public void testCheckUsernameNotUnique() throws Exception {
 		given(userService.isUsernameUnique(anyString())).willReturn(false);
 		
-		mockMvc.perform(get("/auth/checkusername/notunique"))
+		mockMvc.perform(get("/checkusername/notunique"))
 			.andExpect(status().isOk());
 	}
 	@Test
 	public void testCheckUsernameUnique() throws Exception {
 		given(userService.isUsernameUnique(anyString())).willReturn(true);
 		
-		mockMvc.perform(get("/auth/checkusername/notunique"))
-			.andExpect(status().isOk());
+		MvcResult result = mockMvc.perform(get("/checkusername/notunique"))
+			.andExpect(status().isOk())
+			.andReturn();
+		assertEquals(true, Boolean.valueOf(result.getResponse().getContentAsString()));
 	}
 	@Test
 	public void testFindGyGithubUsername() throws Exception {
@@ -113,9 +131,11 @@ public class AppUserDetailsControllerTest {
 	@Test
 	public void testChangeUsername() throws Exception {
 		given(userService.changeUsername(anyString(), anyString())).willReturn(userDto);
-		
-		mockMvc.perform(get("/username/changeusername/newusername"))
-			.andExpect(status().isOk());
+		String oldUsername = "username"; 
+		String newUsername = "changeusername";
+		mockMvc.perform(get("/{username}/changeusername/{newusername}",oldUsername,newUsername))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id", is(Integer.valueOf(userDto.getId().toString()))));
 	}
 
 }

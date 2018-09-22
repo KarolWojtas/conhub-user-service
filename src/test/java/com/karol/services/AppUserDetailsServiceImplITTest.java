@@ -6,14 +6,23 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.hateoas.Link;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -38,11 +47,15 @@ public class AppUserDetailsServiceImplITTest {
 	AppUserDetailsMapper mapper = AppUserDetailsMapper.INSTANCE;
 	AppUserDetails userDetails; 
 	PasswordEncoder encoder = new BCryptPasswordEncoder();
+	Long savedUserDetailsId;
+	
 	@Before
 	public void setUp() throws Exception {
+		MockitoAnnotations.initMocks(this);
 		service = new AppUserDetailsServiceImpl(repository, mapper, encoder);
 		userDto = AppUserDetailsDto.builder().id(2l).username("username").password("password").roles(Roles.USER.getValue()).build();
 		userDetails = AppUserDetails.builder().username("user").password("passwordUser").roles(Roles.ADMIN.getValue()).build();
+		this.savedUserDetailsId = (Long) entityManager.persistAndGetId(userDetails);
 	}
 
 	@Test
@@ -56,7 +69,7 @@ public class AppUserDetailsServiceImplITTest {
 
 	@Test
 	public void testDeleteUserByUsername() {
-		entityManager.persist(userDetails);
+		
 		
 		service.deleteUserByUsername("user");
 		
@@ -65,7 +78,7 @@ public class AppUserDetailsServiceImplITTest {
 
 	@Test
 	public void testPatchUser() throws UserNotFoundException {
-		entityManager.persist(userDetails);
+		
 		userDto.setUsername("user");
 		
 		AppUserDetailsDto patchedDto = service.patchUser(userDto,"user");
@@ -74,7 +87,7 @@ public class AppUserDetailsServiceImplITTest {
 	}
 	@Test
 	public void testPatchUserCondition2() throws UserNotFoundException {
-		entityManager.persist(userDetails);
+		
 		userDto.setUsername("user");
 		userDto.setRoles("ROLE_ADMIN,ROLE_TEST,KJASD,ROLE_USER");
 		
@@ -83,8 +96,20 @@ public class AppUserDetailsServiceImplITTest {
 		assertNotEquals(userDto.getId(), patchedDto.getId());
 	}
 	@Test
+	public void testChangePasswordWithPatch() throws UserNotFoundException {
+		String newPassword ="newpassword";
+		
+		AppUserDetailsDto dto = new AppUserDetailsDto();
+		dto.setPassword(newPassword);
+		service.patchUser(dto, "user");
+		
+		AppUserDetails changedUser = entityManager.find(AppUserDetails.class, this.savedUserDetailsId);
+		
+		assertTrue(encoder.matches("newpassword", changedUser.getPassword()));
+	}
+	@Test
 	public void testIsUsernameUnique() {
-		entityManager.persist(userDetails);
+		
 		
 		boolean shouldBeNotUnique = service.isUsernameUnique("user");
 		boolean shouldBeUnique = service.isUsernameUnique("uniqueusername");
@@ -94,7 +119,7 @@ public class AppUserDetailsServiceImplITTest {
 	}
 	@Test
 	public void testChangeUsername() throws UserNotFoundException, UsernameNotUniqueException {
-		entityManager.persist(userDetails);
+		
 		
 		AppUserDetailsDto changedDto = service.changeUsername("user", "newusername");
 		
@@ -104,16 +129,32 @@ public class AppUserDetailsServiceImplITTest {
 	}
 	@Test(expected=UserNotFoundException.class)
 	public void testChangeUsernameNotFound() throws UserNotFoundException, UsernameNotUniqueException {
+		entityManager.remove(userDetails);
 		AppUserDetailsDto changedDto = service.changeUsername("user", "newusername");
 	}
 	@Test(expected=UsernameNotUniqueException.class)
 	public void testChangeUsernameNotUnigue() throws UserNotFoundException, UsernameNotUniqueException {
 		AppUserDetails user2 = AppUserDetails.builder().username("user2").password("password").roles("ROLE_TEST").build();
-		entityManager.persist(userDetails);
+		
 		entityManager.persist(user2);
 		
 		AppUserDetailsDto changedUser = service.changeUsername("user2", "user");
 		
+		
 	}
+	@Test
+	public void testSaveAvatar() throws UserNotFoundException, IOException {
+		try (FileInputStream fis = new FileInputStream(new File("image.jpg"))){
+			MockMultipartFile imageFile = new MockMultipartFile("file1", "image.png", "image/png", fis);
+			AppUserDetailsDto dtoWithAvatar = service.saveAvatar(imageFile, userDetails.getUsername());
+		
+			assertNotNull(dtoWithAvatar);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+		
+	}
+	
 
 }

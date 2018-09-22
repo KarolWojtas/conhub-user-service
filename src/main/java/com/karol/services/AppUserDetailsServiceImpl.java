@@ -1,19 +1,26 @@
 package com.karol.services;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import javax.transaction.Transactional;
-
-import org.bouncycastle.crypto.tls.UserMappingType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.karol.controller.AppUserDetailsController;
 import com.karol.model.domain.AppUserDetails;
 import com.karol.model.domain.Roles;
 import com.karol.model.dto.AppUserDetailsDto;
@@ -22,12 +29,14 @@ import com.karol.model.exceptions.UsernameNotUniqueException;
 import com.karol.model.mappers.AppUserDetailsMapper;
 import com.karol.services.interfaces.AppUserDetailsService;
 import com.karol.services.repositories.AppUserDetailsRepository;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
 @Service
 public class AppUserDetailsServiceImpl implements AppUserDetailsService{
 	private AppUserDetailsRepository userRepository;
 	private AppUserDetailsMapper userDetailsMapper;
 	private PasswordEncoder passwordEncoder;
 	@Autowired
+
 	public AppUserDetailsServiceImpl(AppUserDetailsRepository userRepository, AppUserDetailsMapper userDetailsMapper,
 			PasswordEncoder passwordEncoder) {
 		super();
@@ -39,10 +48,9 @@ public class AppUserDetailsServiceImpl implements AppUserDetailsService{
 	@Override
 	public AppUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		// TODO Auto-generated method stub
+		
 		return userRepository.findByUsername(username);
 	}
-
-	
 
 	@Override
 	
@@ -88,11 +96,11 @@ public class AppUserDetailsServiceImpl implements AppUserDetailsService{
 		if(savedUser == null) {
 			throw new UserNotFoundException("User: "+userDetailsDto.getUsername()+" not found");
 		}
-		if(!userDetailsDto.getPassword().equals(null)) {
+		if(userDetailsDto.getPassword()!=null) {
 			savedUser.setPassword(passwordEncoder.encode(userDetailsDto.getPassword()));
 			
 		} 
-		if(!userDetailsDto.getRoles().equals(null)) {
+		if(userDetailsDto.getRoles()!=null) {
 			savedUser.setRoles(this.legalRolesFromString(userDetailsDto.getRoles()));
 			
 		}
@@ -144,6 +152,50 @@ public class AppUserDetailsServiceImpl implements AppUserDetailsService{
 		savedUser.setUsername(newUsername);
 		
 		return userDetailsMapper.appUserDetailsToAppUserDetailsDto(userRepository.save(savedUser));
+	}
+
+	@Override
+	public AppUserDetailsDto saveAvatar(MultipartFile imageFile, String username) throws UserNotFoundException, IOException {
+		AppUserDetails savedUser = userOrThrowError(username);
+		//savedUser.setAvatar(imageFile.getBytes());
+		savedUser.setAvatar(compressImage(imageFile, 0.5f));
+		AppUserDetailsDto dtoWithAvatar = userDetailsMapper.appUserDetailsToAppUserDetailsDto(userRepository.save(savedUser));
+		return dtoWithAvatar;
+	}
+	private byte[] compressImage(MultipartFile file, float compressionQuality) {
+		byte[] imageCompressed = null;
+		try (ByteArrayOutputStream os = new ByteArrayOutputStream() ; ImageOutputStream ios = ImageIO.createImageOutputStream(os)){
+			BufferedImage image = ImageIO.read(file.getInputStream());
+			System.out.println(image == null);
+			ImageWriter imageWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+			imageWriter.setOutput(ios);
+			ImageWriteParam param = imageWriter.getDefaultWriteParam();
+			param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			param.setCompressionQuality(compressionQuality);
+			imageWriter.write(null, new IIOImage(image, null, null), param);
+			imageCompressed = os.toByteArray();
+			
+			
+			imageWriter.dispose();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		return imageCompressed;
+	}
+
+	@Override
+	public byte[] getAvatarbyUsername(String username) throws UserNotFoundException {
+		return userOrThrowError(username).getAvatar();
+	}
+	private AppUserDetails userOrThrowError(String username) throws UserNotFoundException {
+		AppUserDetails savedUser = userRepository.findByUsername(username);
+		if(savedUser == null) {
+			throw new UserNotFoundException();
+		} else {
+			return savedUser;
+		}
 	}
 
 }

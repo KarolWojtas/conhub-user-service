@@ -1,6 +1,10 @@
 package com.karol.model.dto;
 
 import java.time.Instant;
+import java.util.List;
+
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Resource;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.karol.model.views.Views;
@@ -15,7 +19,7 @@ import lombok.ToString;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AppUserDetailsDto {
+public class AppUserDetailsDto{
 	@JsonView(Views.Public.class)
 	private Long id;
 	@JsonView(Views.Public.class)

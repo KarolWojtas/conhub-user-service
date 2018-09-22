@@ -8,4 +8,5 @@ public interface AppUserDetailsRepository extends CrudRepository<AppUserDetails,
 	AppUserDetails findByUsername(String username);
 	AppUserDetails findByGithubUsername(String githubUsername);
 	void deleteByUsername(String username);
+	
 }

@@ -1,5 +1,6 @@
 package com.karol.controller;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -16,7 +17,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.karol.model.domain.AppUserDetails;
@@ -47,28 +50,30 @@ public class AppUserDetailsController {
 		return userService.getUserByUsername(username);
 	}
 	@PostMapping("")
-	public ResponseEntity<String> saveUser(@Valid @RequestBody(required=true) AppUserDetailsDto userDto) throws URISyntaxException, UsernameNotUniqueException{
-		userService.saveUser(userDto);
-		return ResponseEntity.created(new URI("/"+userDto.getUsername())).body("Saved user: "+userDto.getUsername());
+	@JsonView(Views.Public.class)
+	public ResponseEntity<AppUserDetailsDto> saveUser(@Valid @RequestBody(required=true) AppUserDetailsDto userDto) throws URISyntaxException, UsernameNotUniqueException{
+		AppUserDetailsDto savedUser = userService.saveUser(userDto);
+		return ResponseEntity.created(new URI("/"+userDto.getUsername())).body(savedUser);
 	}
 	@DeleteMapping("/{username}")
-	public ResponseEntity<String> deleteUser(@PathVariable String username){
+	public ResponseEntity deleteUser(@PathVariable String username){
 		userService.deleteUserByUsername(username);
-		return ResponseEntity.accepted().body("User: "+username+" successfully deleted");
+		return ResponseEntity.accepted().build();
 	}
 	@PatchMapping("/{username}")
-	public ResponseEntity<String> patchUser(@PathVariable String username, @RequestBody(required=true) AppUserDetailsDto userDto) throws UserNotFoundException{
-		userService.patchUser(userDto, username);
-		return ResponseEntity.accepted().body("User: "+username+" successfully patched");
+	@JsonView(Views.Public.class)
+	public ResponseEntity<AppUserDetailsDto> patchUser(@PathVariable String username, @RequestBody(required=true) AppUserDetailsDto userDto) throws UserNotFoundException{
+		AppUserDetailsDto patchedDto = userService.patchUser(userDto, username);
+		return ResponseEntity.accepted().body(patchedDto);
 	}
-	@GetMapping("/auth/checkusername/{username}")
-	public ResponseEntity<String> isUsernameUnique(@PathVariable(required=true) String username){
+	@GetMapping("/checkusername/{username}")
+	public ResponseEntity<Boolean> isUsernameUnique(@PathVariable(required=true) String username){
 		boolean isUsernameUnique = userService.isUsernameUnique(username);
 		System.out.println(isUsernameUnique);
 		if(isUsernameUnique) {
-			return ResponseEntity.ok("true");
+			return ResponseEntity.ok(true);
 		} else {
-			return ResponseEntity.ok("false");
+			return ResponseEntity.ok(false);
 		}
 	}
 	
@@ -81,5 +86,14 @@ public class AppUserDetailsController {
 	@JsonView(Views.Public.class)
 	public AppUserDetailsDto changeUsername(@PathVariable String username, @PathVariable String newusername) throws UserNotFoundException, UsernameNotUniqueException {
 		return userService.changeUsername(username, newusername);
+	}
+	@GetMapping(value="/{username}/avatar",produces= {"image/jpeg"})
+	public ResponseEntity<byte[]> getAvatarByUsername(@PathVariable String username) throws UserNotFoundException{
+		return ResponseEntity.ok(userService.getAvatarbyUsername(username));
+	}
+	@PostMapping("/{username}/avatar")
+	public ResponseEntity<Boolean> saveAvatar(@PathVariable String username, @RequestParam("image") MultipartFile imageFile) throws UserNotFoundException, IOException{
+		AppUserDetailsDto dto = userService.saveAvatar(imageFile, username);
+		return ResponseEntity.ok(dto!=null);
 	}
 }

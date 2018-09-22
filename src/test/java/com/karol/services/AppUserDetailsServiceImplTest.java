@@ -25,6 +25,7 @@ public class AppUserDetailsServiceImplTest {
 	AppUserDetailsRepository userRepository;
 	AppUserDetailsService service;
 	AppUserDetails userDetails;
+	
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
