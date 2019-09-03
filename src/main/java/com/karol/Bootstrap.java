@@ -25,7 +25,7 @@ public class Bootstrap implements CommandLineRunner{
 		AppUserDetailsDto user = new AppUserDetailsDto();
 		user.setUsername("username");
 		user.setPassword("password");
-		user.setRoles("ROLE_USER");
+		user.setRoles("ROLE_USER,ROLE_ADMIN");
 		userDetailsService.saveUser(user);
 	}
 }
